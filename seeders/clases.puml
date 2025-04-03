@@ -25,7 +25,7 @@ class categoriaempleado {
 - nombre : string
 }
 
-class inscripcion {
+class Inscripcion {
 - estudianteId : integer
 - asignaturaId : integer
 - semestre : integer

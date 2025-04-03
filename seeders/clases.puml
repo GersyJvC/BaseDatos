@@ -1,15 +1,19 @@
 @startuml WebApp
-class Persona {
+class persona {
 - nombre : string
 - email : string
 }
 class estudante {
-- matricula : integer
+- Matricula : integer
+- Nombre : string
+- Email : string
+- imagen : blob
 }
 class docente {
 - numEmpleado : integer
+- nombre : string
+- email : string
 }
-
 class asignatura {
 - clave : integer
 - nombre : string
@@ -33,8 +37,8 @@ class contrato {
 - asignaturaId : integer
 }
 
-docente --|> Persona
-estudante --|> Persona
+docente --|> persona
+estudante --|> persona
 docente "*" --> "1" categoriaempleado: tiene >
 estudante "1..*" -- [estudanteId+asignaturaId] inscripcion
 inscripcion [estudanteId+asignaturaId] -- "1..*" asignatura

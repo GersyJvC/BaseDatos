@@ -11,7 +11,8 @@ async up(queryInterface, Sequelize) {
       },
       Matricula: {
         type: Sequelize.INTEGER,
-        unique: true
+        unique: true,
+        nullable:false
       },
       Nombre: {
         type: Sequelize.STRING,
@@ -19,7 +20,8 @@ async up(queryInterface, Sequelize) {
       },
       Email: {
         type: Sequelize.STRING,
-        toDefaultValue: 'notengoemail@gmail.com'
+        toDefaultValue: 'notengoemail@gmail.com',
+        nullable:false
       },
       imagen: {
         type: Sequelize.BLOB

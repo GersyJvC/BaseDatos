@@ -1,20 +1,22 @@
 'use strict';
 
-module.exports = {
-  async up(queryInterface, Sequelize) {
-    await queryInterface.addColumn('Docentes', 'categoriaEmpleadoId', {
-      type: Sequelize.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'CategoriaEmpleados', // Asegúrate de que este nombre sea correcto
-        key: 'id'
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL'
-    });
-  },
+module.exports = (Sequelize, DataTypes) => {
+  const CategoriaEmpleado = Sequelize.define('CategoriaEmpleado', {
+    nombre: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    descripcion: {
+      type: DataTypes.STRING
+    }
+  }, {
+    tableName: 'CategoriaEmpleado', // Asegúrate que el nombre de la tabla sea correcto
+    timestamps: false
+  });
 
-  async down(queryInterface, Sequelize) {
-    await queryInterface.removeColumn('Docentes', 'categoriaEmpleadoId');
-  }
+  CategoriaEmpleado.associate = function(models) {
+    // Aquí define las asociaciones si es necesario
+  };
+
+  return CategoriaEmpleado;
 };

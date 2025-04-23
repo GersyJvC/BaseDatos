@@ -1,27 +1,24 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
-module.exports = (sequelize, DataTypes) => {
-  class Docente extends Model {
-    static associate(models) {
-      this.belongsTo(models.CategoriaEmpleado, {
-        foreignKey: 'categoriaEmpleadoId',
-        as: 'categoria'
-      });
-    }
-  }
-  Docente.init({
-    numEmpleado: DataTypes.INTEGER,
+module.exports = (Sequelize, DataTypes) => {
+  const Docente = Sequelize.define('Docente', {
     nombre: DataTypes.STRING,
     email: DataTypes.STRING,
-    categoriaEmpleadoId: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    }
-  }, {
-    sequelize,
-    modelName: 'Docente',
-  });
+  }, {});
+
+  Docente.associate = function(models) {
+    // Muchos a muchos con Asignatura a través de Contrato
+    Docente.belongsToMany(models.Asignatura, {
+      through: 'Contrato',
+      as: 'asignaturas',
+      foreignKey: 'docenteId',
+    });
+
+    // Relación directa con Contrato (opcional, si necesitas acceder a los contratos directamente)
+    Docente.hasMany(models.Contrato, {
+      foreignKey: 'docenteId',
+      as: 'contratos',
+    });
+  };
+
   return Docente;
 };

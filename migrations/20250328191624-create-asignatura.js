@@ -1,34 +1,31 @@
 'use strict';
-/** @type {import('sequelize-cli').Migration} */
-module.exports = {
-  async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Asignaturas', {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
-        type: Sequelize.INTEGER
-      },
-      clave: {
-        type: Sequelize.INTEGER
-      },
-      nombre: {
-        type: Sequelize.STRING
-      },
-      creditos: {
-        type: Sequelize.INTEGER
-      },
-      createdAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      },
-      updatedAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      }
+
+module.exports = (Sequelize, DataTypes) => {
+  const Asignatura = Sequelize.define('Asignatura', {
+    clave: {  // Cambié de 'codigo' a 'clave'
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true
+    },
+    nombre: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    // Agrega otras propiedades si es necesario
+  }, {
+    tableName: 'Asignaturas', // Si no deseas que Sequelize pluralice la tabla
+    timestamps: false
+  });
+
+  Asignatura.associate = function(models) {
+    // Define las relaciones de la tabla Asignaturas con otras tablas
+    Asignatura.hasMany(models.Inscripcion, { foreignKey: 'asignaturaId' });
+    Asignatura.belongsToMany(models.Estudante, {
+      through: models.Inscripcion,
+      foreignKey: 'asignaturaId',
+      as: 'estudiantes'
     });
-  },
-  async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Asignaturas');
-  }
+  };
+
+  return Asignatura;
 };

@@ -1,29 +1,38 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
-module.exports = (sequelize, DataTypes) => {
-  class Asignatura extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
-    static associate(models) {
-      this.belongsToMany(models.Estudante, {
-        as: "estudante",
-        through: models.Inscripcion,
-        foreignKey: "asignaturaid",
-    });
-  }
-  }
-  Asignatura.init({
-    clave: DataTypes.INTEGER,
-    nombre: DataTypes.STRING,
-    creditos: DataTypes.INTEGER
+
+module.exports = (Sequelize, DataTypes) => {
+  const Asignatura = Sequelize.define('Asignatura', {
+    clave: {  // Asegúrate de que aquí se use 'clave' en lugar de 'codigo'
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true
+    },
+    nombre: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    // Otras propiedades si las tienes
   }, {
-    sequelize,
-    modelName: 'Asignatura',
+    tableName: 'Asignaturas', // No dejes que sequelize pluralice la tabla
+    timestamps: false // Si no estás usando 'createdAt' o 'updatedAt'
   });
+
+  Asignatura.associate = function(models) {
+    Asignatura.hasMany(models.Inscripcion, { foreignKey: 'asignaturaId' });
+    Asignatura.belongsToMany(models.Estudante, {
+      through: 'Inscripcion',
+      as: 'estudantes',
+      foreignKey: 'asignaturaId',
+      otherKey: 'estudianteId'
+    });
+    
+    Asignatura.belongsToMany(models.Docente, {
+      through: 'Contrato',
+      as: 'docentes', // <- este alias es importante
+      foreignKey: 'asignaturaId',
+    });
+    
+  };
+
   return Asignatura;
 };

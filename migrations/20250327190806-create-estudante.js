@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-async up(queryInterface, Sequelize) {
+  async up(queryInterface, Sequelize) {
     await queryInterface.createTable('Estudantes', {
       id: {
         allowNull: false,
@@ -12,30 +12,23 @@ async up(queryInterface, Sequelize) {
       Matricula: {
         type: Sequelize.INTEGER,
         unique: true,
-        nullable:false
+        allowNull: false
       },
       Nombre: {
         type: Sequelize.STRING,
-        nullable:false
+        allowNull: false
       },
-      Email: {
+      correo: {
         type: Sequelize.STRING,
-        toDefaultValue: 'notengoemail@gmail.com',
-        nullable:false
+        defaultValue: 'notengoemail@gmail.com',  // Cambié toDefaultValue por defaultValue
+        allowNull: false
       },
       imagen: {
         type: Sequelize.BLOB
-      },
-      createdAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      },
-      updatedAt: {
-        allowNull: false,
-        type: Sequelize.DATE
       }
     });
   },
+
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Estudantes');
   }

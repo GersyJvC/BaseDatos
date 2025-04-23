@@ -1,5 +1,5 @@
 'use strict';
-/** @type {import('sequelize-cli').Migration} */
+
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('Docentes', {
@@ -10,24 +10,22 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       numEmpleado: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        allowNull: false,  // Asegúrate de que no sea nulo
+        unique: true,  // El número de empleado debe ser único
       },
       nombre: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false,  // No debe ser nulo
       },
       email: {
-        type: Sequelize.STRING
-      },
-      createdAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      },
-      updatedAt: {
-        allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.STRING,
+        allowNull: false,  // No debe ser nulo
+        unique: true,  // El email debe ser único
       }
     });
   },
+
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Docentes');
   }

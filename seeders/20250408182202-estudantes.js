@@ -2,29 +2,27 @@
 
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.bulkInsert('Personas', [
+    await queryInterface.bulkInsert('Estudantes', [
       {
-        nombre: 'Ana Ramírez',
-        email: 'ana.ramirez@example.com',
+        Matricula: 1234,
+        Nombre: 'Federico Paez',
+        Email: 'federico.paez@example.com',
+        personaId: 1, // Asegúrate de que este ID exista en la tabla Personas
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
       {
-        nombre: 'Luis Herrera',
-        email: 'luis.herrera@example.com',
+        Matricula: 5678,
+        Nombre: 'Laura Gómez',
+        Email: 'laura.gomez@example.com',
+        personaId: 2,
         createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        nombre: 'María López',
-        email: 'maria.lopez@example.com',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       }
     ], {});
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('Personas', null, {});
+    await queryInterface.bulkDelete('Estudantes', null, {});
   }
 };

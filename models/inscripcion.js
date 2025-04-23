@@ -1,31 +1,43 @@
 'use strict';
-const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  class Inscripcion extends Model {
-    static associate(models) {
-      // No es necesario definir asociaciones aquí porque ya las definiremos en los otros modelos
-    }
-  }
-  Inscripcion.init({
+  const Inscripcion = sequelize.define('Inscripcion', {
     estudianteId: {
       type: DataTypes.INTEGER,
-      references: {
-        model: 'Estudantes',
-        key: 'id',
-      }
+      allowNull: false,
+      field: 'estudianteId' // ¡Fuerza el nombre exacto de la columna!
     },
     asignaturaId: {
       type: DataTypes.INTEGER,
-      references: {
-        model: 'Asignaturas',
-        key: 'id',
-      }
+      allowNull: false,
     },
-    semestre: DataTypes.INTEGER,
-    calificacion: DataTypes.FLOAT
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: true, // Si no tienes restricciones, puedes permitir que sea nulo
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: true, // Lo mismo aquí
+    }
   }, {
-    sequelize,
-    modelName: 'Inscripcion',
+    tableName: 'Inscripciones', // El nombre correcto de la tabla en MySQL
+    timestamps: true, // Usamos timestamps si tienes 'createdAt' y 'updatedAt' en la base de datos
   });
+
+  // Definir las asociaciones
+  Inscripcion.associate = function(models) {
+    // Relación con el modelo 'Estudante'
+    Inscripcion.belongsTo(models.Estudante, {
+      foreignKey: 'estudianteId',
+      as: 'estudante', // Asegúrate de que el alias coincida con el que usas en las consultas
+    });
+
+    // Relación con el modelo 'Asignatura'
+    Inscripcion.belongsTo(models.Asignatura, {
+      foreignKey: 'asignaturaId',
+      as: 'asignatura', // Lo mismo aquí
+    });
+  };
+
   return Inscripcion;
 };

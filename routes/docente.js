@@ -1,41 +1,52 @@
 const express = require('express');
 const router = express.Router();
-const { Docente } = require('../models');
+const { Docente, Asignatura, Estudante } = require('../models');
 
-// Obtener todos los docentes
+// Obtener todos los docentes sin incluir asignaturas ni estudiantes
 router.get('/', async (req, res) => {
   try {
-    const docentes = await Docente.findAll();
+    const docentes = await Docente.findAll(); // ← solo docentes
     res.json(docentes);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Obtener docente por ID
+// Obtener un docente por ID con sus asignaturas y los estudiantes inscritos
 router.get('/:id', async (req, res) => {
   try {
-    const docente = await Docente.findByPk(req.params.id);
-    docente ? res.json(docente) : res.status(404).json({ message: 'Docente no encontrado' });
+    const docente = await Docente.findByPk(req.params.id, {
+      include: {
+        model: Asignatura,
+        as: 'asignaturas',
+        include: {
+          model: Estudante,
+          as: 'estudantes'
+        }
+      }
+    });
+
+    if (!docente) {
+      return res.status(404).json({ message: 'Docente no encontrado' });
+    }
+
+    res.json(docente);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Buscar por nombre
-router.get('/buscar/nombre/:nombre', async (req, res) => {
-  try {
-    const docentes = await Docente.findAll({ where: { nombre: req.params.nombre } });
-    res.json(docentes);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Crear
+// Crear docente (con asignaturas opcionales)
 router.post('/', async (req, res) => {
+  const { asignaturas, ...docenteData } = req.body;
+
   try {
-    const nuevoDocente = await Docente.create(req.body);
+    const nuevoDocente = await Docente.create(docenteData);
+
+    if (asignaturas && asignaturas.length > 0) {
+      await nuevoDocente.setAsignaturas(asignaturas);
+    }
+
     res.status(201).json(nuevoDocente);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -67,6 +78,80 @@ router.delete('/:id', async (req, res) => {
     } else {
       res.status(404).json({ message: 'Docente no encontrado' });
     }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE /api/asignaturas/:asignaturaId/docentes/:docenteId
+router.delete('/:asignaturaId/docentes/:docenteId', async (req, res) => {
+  const { asignaturaId, docenteId } = req.params;
+  try {
+    const asignatura = await Asignatura.findByPk(asignaturaId);
+    if (!asignatura) return res.status(404).json({ message: 'Asignatura no encontrada' });
+
+    await asignatura.removeDocente(docenteId); // Sequelize también crea este método automáticamente
+    res.json({ message: 'Docente eliminado de la asignatura' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/docente/:id/asignaturas-simples
+router.get('/:id/asignaturas', async (req, res) => {
+  try {
+    const docente = await Docente.findByPk(req.params.id, {
+      include: {
+        model: Asignatura,
+        as: 'asignaturas',
+        through: { attributes: [] } // Oculta la tabla intermedia Contrato
+      }
+    });
+
+    if (!docente) {
+      return res.status(404).json({ message: 'Docente no encontrado' });
+    }
+
+    res.json(docente.asignaturas);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/docente/:id/estudiantes-simples
+router.get('/:id/estudiantes', async (req, res) => {
+  try {
+    const docente = await Docente.findByPk(req.params.id, {
+      include: {
+        model: Asignatura,
+        as: 'asignaturas',
+        include: {
+          model: Estudante,
+          as: 'estudantes',
+          through: { attributes: [] } // Oculta la tabla Inscripcion
+        },
+        through: { attributes: [] } // Oculta la tabla Contrato
+      }
+    });
+
+    if (!docente) {
+      return res.status(404).json({ message: 'Docente no encontrado' });
+    }
+
+    // Extraer estudiantes únicos
+    const estudiantes = [];
+    const idsAgregados = new Set();
+
+    for (const asignatura of docente.asignaturas) {
+      for (const estudiante of asignatura.estudantes) {
+        if (!idsAgregados.has(estudiante.id)) {
+          estudiantes.push(estudiante);
+          idsAgregados.add(estudiante.id);
+        }
+      }
+    }
+
+    res.json(estudiantes);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

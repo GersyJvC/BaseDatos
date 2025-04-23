@@ -1,22 +1,22 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
-module.exports = (sequelize, DataTypes) => {
-  class CategoriaEmpleado extends Model {
-    static associate(models) {
-      this.hasMany(models.Docente, {
-        foreignKey: 'categoriaEmpleadoId',
-        as: 'docentes'
-      });
+
+module.exports = (Sequelize, DataTypes) => {
+  const CategoriaEmpleado = Sequelize.define('CategoriaEmpleado', {
+    nombre: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    descripcion: {
+      type: DataTypes.STRING
     }
-  }
-  CategoriaEmpleado.init({
-    nombre: DataTypes.STRING,
-    clave: DataTypes.INTEGER,
   }, {
-    sequelize,
-    modelName: 'CategoriaEmpleado',
+    tableName: 'CategoriaEmpleado', // Asegúrate que el nombre de la tabla sea correcto
+    timestamps: false
   });
+
+  CategoriaEmpleado.associate = function(models) {
+    // Aquí puedes definir las asociaciones
+  };
+
   return CategoriaEmpleado;
 };

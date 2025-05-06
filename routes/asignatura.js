@@ -1,14 +1,74 @@
 const express = require('express');
+const { Op } = require('sequelize'); // Asegúrate de tener esto
 const router = express.Router();
 const { Asignatura, Docente, Estudante } = require('../models');
+
+// Buscar asignatura por clave
+router.get('/clave/:clave', async (req, res) => {
+  try {
+    const asignatura = await Asignatura.findOne({
+      where: { clave: req.params.clave },
+      include: [
+        {
+          model: Docente,
+          as: 'docentes'
+        },
+        {
+          model: Estudante,
+          as: 'estudantes'
+        }
+      ]
+    });
+
+    if (!asignatura) return res.status(404).json({ message: 'Asignatura no encontrada' });
+
+    res.json(asignatura);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+router.post('/', async (req, res) => {
+  console.log('Creando nueva asignatura con datos:', req.body);  // Log para depurar
+
+  try {
+    const nuevaAsignatura = await Asignatura.create(req.body);
+    res.status(201).json(nuevaAsignatura);
+  } catch (error) {
+    console.error('Error al crear asignatura:', error);  // Log para depurar
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Para eliminar
+router.delete('/:clave', async (req, res) => {
+  const clave = req.params.clave;
+  const asignatura = await Asignatura.findOne({ where: { clave } });
+  if (!asignatura) return res.status(404).json({ error: 'No encontrada' });
+
+  await asignatura.destroy();
+  res.json({ mensaje: 'Eliminada correctamente' });
+});
+
+// Para actualizar
+router.put('/:clave', async (req, res) => {
+  const clave = req.params.clave;
+  const asignatura = await Asignatura.findOne({ where: { clave } });
+  if (!asignatura) return res.status(404).json({ error: 'No encontrada' });
+
+  await asignatura.update(req.body);
+  res.json(asignatura);
+});
+
 
 // Obtener todas las asignaturas con docentes y estudiantes asociados
 router.get('/', async (req, res) => {
   try {
     const asignaturas = await Asignatura.findAll({
       include: [
-        { model: Docente, as: 'docentes' },  // Incluir docentes
-        { model: Estudante, as: 'estudantes' }  // Incluir estudiantes
+        { model: Docente, as: 'docentes' },
+        { model: Estudante, as: 'estudantes' }
       ]
     });
     res.json(asignaturas);
@@ -17,35 +77,19 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Obtener asignatura por ID con docentes y estudiantes asociados
+// Obtener asignatura por ID
 router.get('/:id', async (req, res) => {
   try {
     const asignatura = await Asignatura.findByPk(req.params.id, {
       include: [
-        { model: Docente, as: 'docentes' },  // Incluir docentes
-        { model: Estudante, as: 'estudantes' }  // Incluir estudiantes
+        { model: Docente, as: 'docentes' },
+        { model: Estudante, as: 'estudantes' }
       ]
     });
 
     asignatura
       ? res.json(asignatura)
       : res.status(404).json({ message: 'Asignatura no encontrada' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Buscar asignaturas por nombre
-router.get('/buscar/nombre/:nombre', async (req, res) => {
-  try {
-    const asignaturas = await Asignatura.findAll({
-      where: { nombre: req.params.nombre },
-      include: [
-        { model: Docente, as: 'docentes' },  // Incluir docentes
-        { model: Estudante, as: 'estudantes' }  // Incluir estudiantes
-      ]
-    });
-    res.json(asignaturas);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -91,69 +135,67 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// Obtener estudiantes inscritos en una asignatura
+// Obtener estudiantes de una asignatura
 router.get('/:id/estudantes', async (req, res) => {
   try {
     const asignatura = await Asignatura.findByPk(req.params.id, {
-      include: { model: Estudante, as: 'estudantes' }  // Incluir estudiantes
+      include: { model: Estudante, as: 'estudantes' }
     });
 
     if (!asignatura) {
       return res.status(404).json({ message: 'Asignatura no encontrada' });
     }
 
-    res.json(asignatura.estudantes);  // Devolver solo los estudiantes
+    res.json(asignatura.estudantes);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Obtener docentes que imparten una asignatura
+// Obtener docentes de una asignatura
 router.get('/:id/docentes', async (req, res) => {
   try {
     const asignatura = await Asignatura.findByPk(req.params.id, {
-      include: { model: Docente, as: 'docentes' }  // Incluir docentes
+      include: { model: Docente, as: 'docentes' }
     });
 
     if (!asignatura) {
       return res.status(404).json({ message: 'Asignatura no encontrada' });
     }
 
-    res.json(asignatura.docentes);  // Devolver solo los docentes
+    res.json(asignatura.docentes);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// DELETE /api/asignaturas/:asignaturaId/estudantes/:estudanteId
+// Eliminar estudiante de asignatura
 router.delete('/:asignaturaId/estudantes/:estudanteId', async (req, res) => {
-  const { asignaturaId, estudanteId } = req.params;
   try {
-    const asignatura = await Asignatura.findByPk(asignaturaId);
+    const asignatura = await Asignatura.findByPk(req.params.asignaturaId);
     if (!asignatura) return res.status(404).json({ message: 'Asignatura no encontrada' });
 
-    await asignatura.removeEstudante(estudanteId); // Sequelize crea este método por la relación belongsToMany
+    await asignatura.removeEstudante(req.params.estudanteId);
     res.json({ message: 'Estudiante eliminado de la asignatura' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// DELETE /api/asignaturas/:asignaturaId/docentes/:docenteId
+// Eliminar docente de asignatura
 router.delete('/:asignaturaId/docentes/:docenteId', async (req, res) => {
-  const { asignaturaId, docenteId } = req.params;
   try {
-    const asignatura = await Asignatura.findByPk(asignaturaId);
+    const asignatura = await Asignatura.findByPk(req.params.asignaturaId);
     if (!asignatura) return res.status(404).json({ message: 'Asignatura no encontrada' });
 
-    await asignatura.removeDocente(docenteId); // Sequelize genera este método automáticamente por belongsToMany
+    await asignatura.removeDocente(req.params.docenteId);
     res.json({ message: 'Docente eliminado de la asignatura' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Agregar un estudiante a una asignatura
+// Agregar estudiante a asignatura
 router.post('/:asignaturaId/estudantes/:estudanteId', async (req, res) => {
   try {
     const asignatura = await Asignatura.findByPk(req.params.asignaturaId);
@@ -166,7 +208,7 @@ router.post('/:asignaturaId/estudantes/:estudanteId', async (req, res) => {
   }
 });
 
-// Agregar un docente a una asignatura
+// Agregar docente a asignatura
 router.post('/:asignaturaId/docentes/:docenteId', async (req, res) => {
   try {
     const asignatura = await Asignatura.findByPk(req.params.asignaturaId);
@@ -178,6 +220,5 @@ router.post('/:asignaturaId/docentes/:docenteId', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 
 module.exports = router;

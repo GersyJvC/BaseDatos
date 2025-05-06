@@ -2,20 +2,18 @@ const express = require('express');
 const router = express.Router();
 const { Docente, Asignatura, Estudante } = require('../models');
 
-// Obtener todos los docentes sin incluir asignaturas ni estudiantes
-router.get('/', async (req, res) => {
-  try {
-    const docentes = await Docente.findAll(); // ← solo docentes
-    res.json(docentes);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+// Buscar docente por nombre
+const { Op } = require('sequelize');
 
-// Obtener un docente por ID con sus asignaturas y los estudiantes inscritos
-router.get('/:id', async (req, res) => {
+// Obtener docente con sus asignaturas y estudiantes
+router.get('/nombre/:nombre', async (req, res) => {
   try {
-    const docente = await Docente.findByPk(req.params.id, {
+    const docente = await Docente.findOne({
+      where: {
+        nombre: {
+          [Op.like]: `%${req.params.nombre}%`
+        }
+      },
       include: {
         model: Asignatura,
         as: 'asignaturas',
@@ -32,9 +30,62 @@ router.get('/:id', async (req, res) => {
 
     res.json(docente);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 });
+
+
+// Agregar asignatura a docente
+router.post('/:docenteId/asignaturas/:asignaturaId', async (req, res) => {
+  const { docenteId, asignaturaId } = req.params;
+
+  try {
+    const docente = await Docente.findByPk(docenteId);
+    const asignatura = await Asignatura.findByPk(asignaturaId);
+
+    if (!docente || !asignatura) {
+      return res.status(404).json({ message: 'Docente o asignatura no encontrados' });
+    }
+
+    await docente.addAsignatura(asignatura);  // Asocia la asignatura al docente
+    res.status(201).json({ message: 'Asignatura agregada al docente' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Obtener todos los docentes sin incluir asignaturas ni estudiantes
+router.get('/', async (req, res) => {
+  try {
+    const docentes = await Docente.findAll(); // ← solo docentes
+    res.json(docentes);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+router.delete('/:id/asignaturas/:clave', async (req, res) => {
+  try {
+    const docente = await Docente.findByPk(req.params.id);
+    const asignatura = await Asignatura.findByPk(req.params.clave);
+
+    if (!docente || !asignatura) {
+      return res.status(404).json({ message: 'Docente o asignatura no encontrados' });
+    }
+
+    await docente.removeAsignatura(asignatura);
+    res.json({ message: 'Asignatura eliminada del docente' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+
+
+// Obtener un docente por ID con sus asignaturas y los estudiantes inscrito
 
 // Crear docente (con asignaturas opcionales)
 router.post('/', async (req, res) => {

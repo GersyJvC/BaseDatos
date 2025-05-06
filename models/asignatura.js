@@ -14,24 +14,24 @@ module.exports = (Sequelize, DataTypes) => {
     // Otras propiedades si las tienes
   }, {
     tableName: 'Asignaturas', // No dejes que sequelize pluralice la tabla
-    timestamps: false // Si no estás usando 'createdAt' o 'updatedAt'
+    timestamps: true,
+    createdAt: 'fechaInscripcion', // nombre personalizado para createdAt
+    updatedAt: 'updatedAt'         // deja este si se llama así en tu tabla
   });
 
   Asignatura.associate = function(models) {
     Asignatura.hasMany(models.Inscripcion, { foreignKey: 'asignaturaId' });
+    Asignatura.belongsToMany(models.Docente, {
+      through: 'Contrato',
+      as: 'docentes',
+      foreignKey: 'asignaturaId'
+    });
+    
     Asignatura.belongsToMany(models.Estudante, {
       through: 'Inscripcion',
       as: 'estudantes',
-      foreignKey: 'asignaturaId',
-      otherKey: 'estudianteId'
-    });
-    
-    Asignatura.belongsToMany(models.Docente, {
-      through: 'Contrato',
-      as: 'docentes', // <- este alias es importante
-      foreignKey: 'asignaturaId',
-    });
-    
+      foreignKey: 'asignaturaId'
+    });    
   };
 
   return Asignatura;

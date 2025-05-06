@@ -8,7 +8,13 @@ const asignaturaRoutes = require('./routes/asignatura');
 const inscripcionRoutes = require('./routes/inscripcion');
 const contratoRoutes = require('./routes/contrato');
 
+const cors = require('cors');
+app.use(cors());
+
 app.use(express.json());
+
+const estudantesRouter = require('./routes/estudante')
+app.use('/api/estudante', estudantesRouter)
 
 // Rutas principales
 app.use('/api/personas', personaRoutes);
